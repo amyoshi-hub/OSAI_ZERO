@@ -44,6 +44,7 @@ nasm -f bin でやるとOSAI_exeから呼び出せる
 ⚙️ 実行の流れ（OSAI Launcher）
 
     osai-launcher が .osai をロード
+    (binだといい感じなのでelf形式のバイナリをbinにする)
 
     ヘッダを解析し、メモリを動的に mmap 割当
 

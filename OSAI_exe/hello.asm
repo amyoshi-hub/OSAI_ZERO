@@ -8,6 +8,15 @@ section .text
     global _start
 
 _start:
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
     mov     rax, 1 
     mov	    rdi, 1
     lea     rsi, [rel msg]
