@@ -1,0 +1,84 @@
+OSAI：TODO
+
+大きく２つ
+OSカーネルにAIを導入してルールを動的に変える
+実行ファイルのzerofillは無駄である
+
+
+kernel
+動的に変えるメリット
+ 動的に変えて認識できる仕組みー＞バージョンの更新とかが自発的に行われる
+ formatとかでファイル形式を担保してもルールが変わっていくので枯渇しない
+ IPV6についてもOSレベルで管理するのでedge内で衝突が無いことを確認できればinnernetが作れる
+
+デメリット
+　言わずもがなバグの元（そもそもの動作をAIが決めれば超絶困ることはない）
+
+
+AI kernelは完全に成長するまでは企業とかには向かない（これがネックよね）
+
+
+internet善人説が適用されていないと積む
+
+zerofill
+ これはOSAIに入れたい機構
+ 例えばOSもelf64形式も残しつつ、headerでファイルを管理し、zeroを除去するコンパイラを作る(それでも実行できるように)
+ headerを追加して柔軟にzerofillとか機構に踊らされないような仕組みを作るコンパイラを作る
+ 
+ こっちも制御は難しいだろうけど基本的なasmコンパイルは使えるはず、ただzeroを最小に収めるだけ
+
+　vec型との兼ね合いがあるんだろうけど、offsetとか使えばなんとかなるでしょ
+
+
+✅ OSAI TODO（概要）
+① AI Kernel（ルールを動的に変えるOS）
+✨ メリット
+
+    formatや通信規格をAIが学習して適応的に変化
+
+    IPv6のような枯渇問題を回避（独自に名前解決・衝突検出も可能）
+
+    自律的にアップデートする“学習型カーネル”
+
+⚠️ デメリット
+
+    バグ＝地獄（OSの核が変動するので想定外に弱い）
+
+    初期は企業導入NG（予測不能な挙動と信用問題）
+
+    善意ベース（Internetが悪意前提だと防御に弱い）
+
+🔧 次にできること
+
+    format.json や kernel.rules.toml 的な「動的に再生成されるルールベース」実装
+
+    ログ収集 → AI学習 → カーネル内部規則の書き換え → セーフモードで適用
+
+    Rustベースで --dry-run 的なAIカーネルチェッカーから始めるのが安全
+
+② Zero-Fill除去対応の実行形式
+✅ 目標
+
+    ELF64形式を残しつつ、実行に影響を与えない形でzero領域を排除
+
+    必要なのは bss 削除、data再配置、.text最適化など
+
+    コンパイラ/リンカ/フォーマットヘッダの再設計
+
+🔧 実装案
+
+    LLVM IR → 独自Format出力（RustまたはCで）
+
+    既存ELF→OSAI-FMT変換ツール（zero領域除去、metadata追加）
+
+    .vec（動的配列）には offset情報と realloc対応があればOK
+
+    最初は hello_world.osai を出力する「OSAI-cc（仮）」を試作
+
+🔨 スモールステップ提案（今すぐできること）
+ステップ	内容	使用技術例
+1	OSAI-FMT v0.1 の構造ドラフト作成	JSON/YAML形式で記述
+2	elf2osai 変換ツール（C/Rust）	goblin, object crate or readelf
+3	osai-runner（ELFライクなランチャ）	mmap + jump to entry
+4	AIカーネル規則ファイル読み込み	Rustでhot-reloadable toml/jsonパーサ
+5	Zero-Freeな hello.osai 出力できる osai-cc 試作	TinyCCやclangバックエンド利用可能
